@@ -63,9 +63,9 @@ jobs:
           function ok(n,fn){try{fn();pass++;}catch(e){console.error('FAIL:',n,e.message);fail++;}}
           async function okA(n,fn){try{await fn();pass++;}catch(e){console.error('FAIL:',n,e.message);fail++;}}
 
-          await okA('Planner-ming',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','ming');assert(p.steps.length>=2);});
-          await okA('Planner-tang',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','tang');assert(p.steps.length>=4);});
-          await okA('Planner-modern',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','modern');assert(p.steps.length>=2);});
+          await okA('Planner-ming',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','ming',{forceLLM:true});assert(p.steps.length>=2);});
+          await okA('Planner-tang',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','tang',{forceLLM:true});assert(p.steps.length>=4);});
+          await okA('Planner-modern',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','modern',{forceLLM:true});assert(p.steps.length>=2);});
           ok('Gate-wildcard',()=>{const{PermissionGate}=require('./src/menxia/permission-gate');assert(new PermissionGate('tang').checkAgentCall('shangshu_ling','bing_bu').allowed);});
           ok('Gate-deny',()=>{const{PermissionGate}=require('./src/menxia/permission-gate');assert(!new PermissionGate('ming').checkAgentCall('bingbu','hubu').allowed);});
           ok('Security',()=>{const{checkCommandSafety}=require('./src/menxia/security-check');assert(checkCommandSafety('ls').safe);assert(checkCommandSafety('rm -rf /').blocked);});
