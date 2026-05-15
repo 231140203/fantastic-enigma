@@ -821,6 +821,7 @@ async function startRepl(options) {
       const args = input.replace(/^\/(debate|廷议)\s*/, '').trim();
 
       let rounds = 2;
+      let phase = 'full';
       let topic = args;
 
       // 解析 --rounds
@@ -830,17 +831,25 @@ async function startRepl(options) {
         topic = args.replace(/--rounds?\s+\d+/, '').trim();
       }
 
+      // 解析 --phase
+      const phaseMatch = args.match(/--phase\s+(\w+)/);
+      if (phaseMatch) {
+        phase = phaseMatch[1];
+        topic = args.replace(/--phase\s+\w+/, '').trim();
+      }
+
       if (!topic) {
-        console.log(chalk.yellow('\n  用法: /debate [--rounds N] "议题"'));
+        console.log(chalk.yellow('\n  用法: /debate [--rounds N] [--phase planning|review|full] "议题"'));
         console.log(chalk.gray('  示例: /debate "我们应该用 PostgreSQL 还是 MongoDB？"'));
-        console.log(chalk.gray('  示例: /debate --rounds 3 "微服务 vs 单体架构"\n'));
+        console.log(chalk.gray('  示例: /debate --rounds 3 "微服务 vs 单体架构"'));
+        console.log(chalk.gray('  示例: /debate --phase planning "选校名单初稿"\n'));
         rl.prompt();
         return;
       }
 
       isProcessing = true;
       try {
-        await runDebate({ topic, rounds, regimeId: currentRegime });
+        await runDebate({ topic, rounds, phase, regimeId: currentRegime });
         console.log(chalk.gray('  💡 意犹未尽？让他们 PK: /pk bingbu hubu "同一任务" | 看合拍度: /personality chemistry bingbu hubu'));
       } catch (err) {
         console.error(chalk.red(`\n  廷议失败: ${err.message}\n`));

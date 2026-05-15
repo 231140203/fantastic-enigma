@@ -164,7 +164,8 @@ async function runDebate(params) {
     console.log(chalk.gray('  └──────────────────────────────────────────────'));
 
   } catch (err) {
-    summarySpinner.fail('总结失败');
+    summarySpinner.stop();
+    console.error(chalk.red('  ✗ 总结失败: ' + err.message));
   }
 
   const cost = costTracker.getSummary ? costTracker.getSummary() : { total: { inputTokens: 0, outputTokens: 0 } };
