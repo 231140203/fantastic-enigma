@@ -849,7 +849,7 @@ async function startRepl(options) {
 
       isProcessing = true;
       try {
-        await runDebate({ topic, rounds, phase, regimeId: currentRegime });
+        await runDebate(topic, currentRegime, { rounds, phase });
         console.log(chalk.gray('  💡 意犹未尽？让他们 PK: /pk bingbu hubu "同一任务" | 看合拍度: /personality chemistry bingbu hubu'));
       } catch (err) {
         console.error(chalk.red(`\n  廷议失败: ${err.message}\n`));

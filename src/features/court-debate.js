@@ -41,16 +41,15 @@ const AGENT_COLORS = [
  * @param {string} [params.regimeId='ming']
  * @returns {Promise<object>}
  */
-async function runDebate(params) {
-  const { topic, rounds = 2, regimeId = 'ming' } = params;
+async function runDebate(topic, regimeId = 'ming', options = {}) {
+  const { rounds = 2, phase = 'full', participants } = options;
   const config = loadConfig() || {};
   const regime = getRegime(regimeId);
   const costTracker = new CostTracker();
 
   // 自动选择参与者：决策层 + 相关执行层
-  const phase = params.phase || 'full';
   const excludeExecution = phase === 'planning' || phase === 'review';
-  const participants = params.participants
+  const selectedParticipants = participants
     || selectParticipants(topic, regime, excludeExecution);
 
   // ── Banner ──
@@ -59,7 +58,7 @@ async function runDebate(params) {
   console.log();
   console.log(chalk.white(`  议题: ${chalk.bold(topic)}`));
   console.log(chalk.white(`  轮次: ${rounds}`));
-  console.log(chalk.white(`  参与: ${participants.map(p => {
+  console.log(chalk.white(`  参与: ${selectedParticipants.map(p => {
     const a = regime.agents.find(ag => ag.id === p);
     return a ? `${a.emoji} ${a.name}` : p;
   }).join('  ')}`));
@@ -72,8 +71,8 @@ async function runDebate(params) {
   for (let round = 1; round <= rounds; round++) {
     console.log(chalk.yellow(`  ═══ 第${numToChinese(round)}轮 ${'═'.repeat(40)}\n`));
 
-    for (let i = 0; i < participants.length; i++) {
-      const agentId = participants[i];
+    for (let i = 0; i < selectedParticipants.length; i++) {
+      const agentId = selectedParticipants[i];
       const agent = regime.agents.find(a => a.id === agentId);
       const name = agent ? agent.name : agentId;
       const emoji = agent ? agent.emoji : '🗣️';
@@ -171,9 +170,10 @@ async function runDebate(params) {
   const cost = costTracker.getSummary ? costTracker.getSummary() : { total: { inputTokens: 0, outputTokens: 0 } };
   const totalTokens = (cost?.total?.inputTokens || 0) + (cost?.total?.outputTokens || 0);
   console.log(chalk.gray(`\n  ⚡ 廷议消耗: ${totalTokens} tokens`));
+  console.log(chalk.gray(`  ⚡ 本次廷议 Token 明细: 输入 ${cost?.total?.inputTokens || 0} / 输出 ${cost?.total?.outputTokens || 0}`));
   console.log();
 
-  return { transcript, topic, rounds };
+  return { transcript, topic, rounds, cost: cost };
 }
 
 /**
