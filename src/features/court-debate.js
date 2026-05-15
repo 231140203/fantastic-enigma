@@ -91,7 +91,7 @@ async function runDebate(topic, regimeId = 'ming', options = {}) {
           model,
           system: systemPrompt,
           messages: [{ role: 'user', content: userMessage }],
-          maxTokens: 1024
+          maxTokens: 512
         });
 
         // 兼容不同 LLM 返回格式
@@ -148,7 +148,7 @@ async function runDebate(topic, regimeId = 'ming', options = {}) {
       model,
       system: '你是太史令，负责客观记录和总结朝堂廷议。',
       messages: [{ role: 'user', content: summaryPrompt }],
-      maxTokens: 1024
+      maxTokens: 512
     });
 
     summarySpinner.stop();
@@ -183,14 +183,14 @@ async function runDebate(topic, regimeId = 'ming', options = {}) {
 function selectParticipants(topic, regime, excludeExecution = false) {
   const agents = regime.agents || [];
 
-  // 决策层一定参与
+  // 决策层最多 2 个
   const planners = agents.filter(a => a.layer === 'planning').slice(0, 2);
 
-  // 执行层（最多3个参与，除非被排除）
-  const executors = excludeExecution ? [] : agents.filter(a => a.layer === 'execution').slice(0, 3);
+  // 执行层最多 2 个（除非被排除）
+  const executors = excludeExecution ? [] : agents.filter(a => a.layer === 'execution').slice(0, 2);
 
-  // 审核层参与（全部参与，确保辩论充分）
-  const reviewers = agents.filter(a => a.layer === 'review');
+  // 审核层最多 3 个
+  const reviewers = agents.filter(a => a.layer === 'review').slice(0, 3);
 
   const all = [...planners, ...executors, ...reviewers];
   return [...new Set(all.map(a => a.id))];
@@ -232,9 +232,11 @@ function buildDebateMessage(topic, transcript, currentRound, currentAgentId, reg
   const parts = [`廷议议题: ${topic}\n`];
   parts.push(`你的职责: ${roleDesc}\n`);
 
-  if (transcript.length > 0) {
+  // 只保留最近 2 轮的发言，减少 Token 消耗
+  const recentTranscript = transcript.filter(entry => entry.round >= currentRound - 1);
+  if (recentTranscript.length > 0) {
     parts.push('之前的发言记录:');
-    for (const entry of transcript) {
+    for (const entry of recentTranscript) {
       parts.push(`\n[${entry.name}] (第${entry.round}轮):`);
       parts.push(entry.speech);
     }
