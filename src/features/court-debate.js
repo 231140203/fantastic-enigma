@@ -86,7 +86,7 @@ async function runDebate(params) {
       try {
         // 构建上下文：包含之前所有发言
         const systemPrompt = buildDebatePrompt(agentId, regimeId, round, rounds);
-        const userMessage = buildDebateMessage(topic, transcript, round, agentId);
+        const userMessage = buildDebateMessage(topic, transcript, round, agentId, regimeId);
 
         const response = await callLLM({
           model,
@@ -189,8 +189,8 @@ function selectParticipants(topic, regime, excludeExecution = false) {
   // 执行层（最多3个参与，除非被排除）
   const executors = excludeExecution ? [] : agents.filter(a => a.layer === 'execution').slice(0, 3);
 
-  // 审核层参与
-  const reviewers = agents.filter(a => a.layer === 'review').slice(0, 1);
+  // 审核层参与（全部参与，确保辩论充分）
+  const reviewers = agents.filter(a => a.layer === 'review');
 
   const all = [...planners, ...executors, ...reviewers];
   return [...new Set(all.map(a => a.id))];
@@ -202,11 +202,17 @@ function selectParticipants(topic, regime, excludeExecution = false) {
  */
 function buildDebatePrompt(agentId, regimeId, currentRound, totalRounds) {
   const base = buildSystemPrompt(agentId, regimeId);
+  const regime = getRegime(regimeId);
+  const agent = regime.agents.find(a => a.id === agentId);
+  const roleDesc = agent ? agent.role : '';
+
   return `${base}
 
 ## 当前是廷议（朝堂辩论）模式
 
-你正在参与一场廷议。规则：
+你正在参与一场廷议。你的职责是：${roleDesc}
+
+规则：
 - 你需要从自己的职能角度对议题发表看法
 - 如果你不同意之前其他大臣的意见，直接指出并说明理由
 - 如果你同意，可以补充细节或提出新的角度
@@ -218,8 +224,13 @@ function buildDebatePrompt(agentId, regimeId, currentRound, totalRounds) {
  * 构建辩论用户消息
  * @private
  */
-function buildDebateMessage(topic, transcript, currentRound, currentAgentId) {
+function buildDebateMessage(topic, transcript, currentRound, currentAgentId, regimeId) {
+  const regime = getRegime(regimeId);
+  const agent = regime.agents.find(a => a.id === currentAgentId);
+  const roleDesc = agent ? agent.role : '';
+
   const parts = [`廷议议题: ${topic}\n`];
+  parts.push(`你的职责: ${roleDesc}\n`);
 
   if (transcript.length > 0) {
     parts.push('之前的发言记录:');
