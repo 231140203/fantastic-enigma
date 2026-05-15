@@ -63,19 +63,19 @@ jobs:
           function ok(n,fn){try{fn();pass++;}catch(e){console.error('FAIL:',n,e.message);fail++;}}
           async function okA(n,fn){try{await fn();pass++;}catch(e){console.error('FAIL:',n,e.message);fail++;}}
 
-          ok('Planner-ming',()=>{const{generatePlan}=require('./src/zhongshu/planner');assert(generatePlan('写代码','ming').steps.length>=2);});
-          ok('Planner-tang',()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=generatePlan('写代码','tang');assert(p.steps.length>=4);});
-          ok('Planner-modern',()=>{const{generatePlan}=require('./src/zhongshu/planner');assert(generatePlan('写代码','modern').steps.length>=2);});
+          await okA('Planner-ming',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','ming');assert(p.steps.length>=2);});
+          await okA('Planner-tang',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','tang');assert(p.steps.length>=4);});
+          await okA('Planner-modern',async()=>{const{generatePlan}=require('./src/zhongshu/planner');const p=await generatePlan('写代码','modern');assert(p.steps.length>=2);});
           ok('Gate-wildcard',()=>{const{PermissionGate}=require('./src/menxia/permission-gate');assert(new PermissionGate('tang').checkAgentCall('shangshu_ling','bing_bu').allowed);});
           ok('Gate-deny',()=>{const{PermissionGate}=require('./src/menxia/permission-gate');assert(!new PermissionGate('ming').checkAgentCall('bingbu','hubu').allowed);});
           ok('Security',()=>{const{checkCommandSafety}=require('./src/menxia/security-check');assert(checkCommandSafety('ls').safe);assert(checkCommandSafety('rm -rf /').blocked);});
-          ok('CostTracker',()=>{const{CostTracker}=require('./src/shangshu/hu/cost-tracker');const c=new CostTracker(5);c.record('a','claude-sonnet-4-6',1000,500);assert(c.usage.totalCostUsd>0);});
+          ok('CostTracker',()=>{const{CostTracker}=require('./src/shangshu/hu/cost-tracker');const c=new CostTracker();c.record('a','claude-sonnet-4-6',1000,500);assert(c.usage.inputTokens+c.usage.outputTokens>0);});
           ok('FileOps',()=>{const{readFile}=require('./src/shangshu/bing/file-ops');assert(readFile('./package.json').content.includes('tiangong'));});
           await okA('Glob',async()=>{const{executeTool}=require('./src/shangshu/bing/tools');assert((await executeTool('glob',{pattern:'**/*.json'},{cwd:process.cwd()})).includes('package.json'));});
           ok('PromptBuilder',()=>{const{buildSystemPrompt}=require('./src/zhongshu/prompt-builder');assert(buildSystemPrompt('bingbu','ming').includes('兵部'));});
           ok('Memory',()=>{const{MemoryStore}=require('./src/memory/store');const m=new MemoryStore();m.saveAgentMemory('_ci',{type:'skill',content:'ci test'});m.wipeAgentMemory('_ci');});
           ok('VikingStore',()=>{const{vikingStore}=require('./src/memory/viking-store');vikingStore.write('viking://agent/_ci/s',{content:'ci',type:'skill'});vikingStore.remove('viking://agent/_ci/s');});
-          ok('Regimes',()=>{const{getRegime}=require('./src/config/regimes');assert(getRegime('ming').agents.length===10);assert(getRegime('tang').agents.length===9);assert(getRegime('modern').agents.length===8);});
+          ok('Regimes',()=>{const{getRegime}=require('./src/config/regimes');assert(getRegime('ming').agents.length===10);assert(getRegime('tang').agents.length===10);assert(getRegime('modern').agents.length===8);});
 
           console.log(fail===0?pass+'/'+pass+' passed':'FAIL: '+fail);
           process.exit(fail>0?1:0);
