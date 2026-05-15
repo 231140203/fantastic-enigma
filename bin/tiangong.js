@@ -397,7 +397,7 @@ const NO_SETUP_COMMANDS = ['setup', 'court', 'regimes'];
 const args = process.argv.slice(2);
 const subCommand = args.find(a => !a.startsWith('-'));
 
-if (needsSetup() && !NO_SETUP_COMMANDS.includes(subCommand) && !args.includes('--help') && !args.includes('-h') && !args.includes('--version') && !args.includes('-V')) {
+if (needsSetup() && !NO_SETUP_COMMANDS.includes(subCommand) && !args.includes('--help') && !args.includes('-h') && !args.includes('--version') && !args.includes('-V') && !args.includes('--dry-run')) {
   (async () => {
     await runSetup();
     // setup 完成后重新 parse
