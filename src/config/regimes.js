@@ -32,13 +32,14 @@ const MING_REGIME = {
     { id: 'hubu', name: '户部', emoji: '💰', role: '财务分析 + 数据', layer: 'execution', canCall: [] },
     { id: 'libu', name: '礼部', emoji: '🎭', role: '品牌营销 + 内容', layer: 'execution', canCall: [] },
     { id: 'gongbu', name: '工部', emoji: '🔧', role: 'DevOps + 运维', layer: 'execution', canCall: [] },
-    { id: 'libu2', name: '吏部', emoji: '📋', role: '项目管理', layer: 'execution', canCall: [] },
+    { id: 'libu_li', name: '吏部', emoji: '📋', role: '项目管理', layer: 'execution', canCall: [] },
     { id: 'xingbu', name: '刑部', emoji: '⚖️', role: '法务合规', layer: 'execution', canCall: [] },
     { id: 'duchayuan', name: '都察院', emoji: '🔍', role: '独立审查', layer: 'review', canCall: [] },
     { id: 'hanlin', name: '翰林院', emoji: '✍️', role: '文书创作', layer: 'execution', canCall: ['hanlin_*'] }
   ],
   flow: ['silijian', 'neige', '{六部}', 'duchayuan'],
-  permissions: 'ming' // 引用 permission-guard 的明制权限矩阵
+  permissions: 'ming', // 引用 permission-guard 的明制权限矩阵
+  canReject: {} // 明制无封驳权
 };
 
 // ─── 唐朝三省制 ─────────────────────────────────────
@@ -114,7 +115,8 @@ const MODERN_REGIME = {
     { id: 'marketer', name: 'Marketer', emoji: '🎨', role: '内容创作', layer: 'execution', canCall: [] }
   ],
   flow: ['ceo', '{CXO}', '{teams}'],
-  permissions: 'modern'
+  permissions: 'modern',
+  canReject: {} // 现代制无封驳权
 };
 
 // ─── 注册表 ──────────────────────────────────────────

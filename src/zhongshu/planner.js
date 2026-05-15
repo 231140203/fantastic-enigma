@@ -90,7 +90,7 @@ const TASK_PATTERNS = {
 const TASK_AGENT_MAP = {
   ming: {
     coding: 'bingbu', review: 'duchayuan', devops: 'gongbu',
-    finance: 'hubu', marketing: 'libu', management: 'libu2',
+    finance: 'hubu', marketing: 'libu', management: 'libu_li',
     legal: 'xingbu', writing: 'hanlin'
   },
   tang: {
@@ -211,7 +211,8 @@ ${agentList}
       _tiangong: { taskType: 'planning', agentId: 'planner', layer: 'planning', isSimple: false }
     });
 
-    const content = response.content || '';
+    // callLLM 可能返回 { content } 或 { choices: [{ message: { content } }] }
+    const content = response.content || (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) || '';
 
     // 从响应中提取 JSON
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -272,7 +273,7 @@ async function generatePlan(prompt, regimeId = 'ming', options = {}) {
   // ── L0: 简单对话 / 单领域任务 → 快速路径 ──
   if (!options.forceLLM && isSimpleChat(prompt)) {
     const agentId = pickFastPathAgent(prompt, regimeId, regime);
-    return {
+    return Promise.resolve({
       prompt,
       regime: regimeId,
       taskTypes: ['chat'],
@@ -285,7 +286,7 @@ async function generatePlan(prompt, regimeId = 'ming', options = {}) {
         input: prompt
       }],
       createdAt: new Date().toISOString()
-    };
+    });
   }
 
   // ── L1: 复杂任务 → 尝试 LLM 智能规划 ──

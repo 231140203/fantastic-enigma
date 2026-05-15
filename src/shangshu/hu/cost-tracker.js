@@ -29,7 +29,7 @@ class CostTracker {
 
   /** 检查是否超限（基于 token 总量） */
   isOverBudget() {
-    const maxTokens = parseInt(process.env.TIANGONG_MAX_TOKENS_TOTAL) || 2_000_000;
+    const maxTokens = parseInt(process.env.TIANGONG_MAX_TOKENS_TOTAL, 10) || 2_000_000;
     return (this.usage.inputTokens + this.usage.outputTokens) >= maxTokens;
   }
 
@@ -39,6 +39,17 @@ class CostTracker {
       total: { ...this.usage },
       perAgent: this.perAgent
     };
+  }
+
+  /** 重置所有统计数据 */
+  reset() {
+    this.usage = { inputTokens: 0, outputTokens: 0 };
+    this.perAgent = {};
+  }
+
+  /** 获取总 token 数 */
+  getTotalTokens() {
+    return this.usage.inputTokens + this.usage.outputTokens;
   }
 }
 
