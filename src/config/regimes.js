@@ -45,15 +45,15 @@ const MING_REGIME = {
 
 const TANG_REGIME = {
   id: 'tang',
-  name: '🐉 唐朝三省制',
-  description: '中书起草 → 门下审核 → 尚书执行，三权制衡',
-  style: '严谨审核，制衡防错',
-  agentCount: 9,
+  name: '🐉 OfferPilot 共识定档模式 (基于唐制)',
+  description: '中书起草初版名单 → 门下激进/保守辩论 → 尚书执行申请材料',
+  style: '辩论定档，三权制衡',
+  agentCount: 10,
   diagram: `
-    天子（用户）
+    用户（申请人）
       ▼
     中书省 ──→ 门下省 ──→ 尚书省
-    (起草)     (审核)     (执行)
+    (起草)     (辩论)     (执行)
       ↑                     │
       └─── 封驳退回 ←───────┘
   `,
@@ -63,17 +63,21 @@ const TANG_REGIME = {
     execution: 'shangshu'
   },
   agents: [
-    { id: 'zhongshu_ling', name: '中书令', emoji: '📝', role: '起草方案 + 分析需求', layer: 'planning', canCall: ['menxia_shilang'] },
-    { id: 'zhongshu_sheren', name: '中书舍人', emoji: '🖊️', role: 'Prompt 优化', layer: 'planning', canCall: [] },
-    { id: 'menxia_shilang', name: '门下侍郎', emoji: '🛡️', role: '审核方案 + 权限检查', layer: 'review', canCall: ['shangshu_ling', 'jishizhong'] },
-    { id: 'jishizhong', name: '给事中', emoji: '⚡', role: '封驳权 — 驳回不合理方案', layer: 'review', canCall: ['zhongshu_ling'] },
-    { id: 'shangshu_ling', name: '尚书令', emoji: '🏗️', role: '调度六部执行', layer: 'execution', canCall: ['*_bu', 'jishizhong'] },
-    { id: 'li_bu', name: '吏部', emoji: '📋', role: '项目管理', layer: 'execution', canCall: [] },
-    { id: 'hu_bu', name: '户部', emoji: '💰', role: '资源管理', layer: 'execution', canCall: [] },
-    { id: 'bing_bu', name: '兵部', emoji: '⚔️', role: '编码开发', layer: 'execution', canCall: [] },
-    { id: 'gong_bu', name: '工部', emoji: '🔧', role: '运维部署', layer: 'execution', canCall: [] }
+    // ── 中书省 / planning ──
+    { id: 'zhongshu_ling', name: '主申策略师', emoji: '📝', role: '起草初版选校/选导师名单', layer: 'planning', canCall: ['zhongshu_sheren', 'menxia_shilang', 'left_auditor'] },
+    { id: 'zhongshu_sheren', name: '情报检索官', emoji: '🔍', role: '查排名/录取数据/导师信息', layer: 'planning', canCall: [] },
+    // ── 门下省 / review ──
+    { id: 'menxia_shilang', name: '保守风控官', emoji: '🛡️', role: '挑刺、保底方案、安全边际', layer: 'review', canCall: ['jishizhong'] },
+    { id: 'left_auditor', name: '激进挖掘官', emoji: '🚀', role: '主张冲刺校、挖掘隐藏机会', layer: 'review', canCall: ['jishizhong'] },
+    { id: 'jishizhong', name: '最终裁决官', emoji: '⚡', role: '下发 APPROVE 或 VETO', layer: 'review', canCall: ['shangshu_ling'] },
+    // ── 尚书省 / execution ──
+    { id: 'shangshu_ling', name: '尚书令', emoji: '🏗️', role: '调度六部执行申请材料', layer: 'execution', canCall: ['*_bu'] },
+    { id: 'li_bu', name: '吏部', emoji: '📋', role: '甘特图 — 时间规划', layer: 'execution', canCall: [] },
+    { id: 'hu_bu', name: '户部', emoji: '💰', role: '预算 — 申请费/签证费', layer: 'execution', canCall: [] },
+    { id: 'bing_bu', name: '兵部', emoji: '⚔️', role: '套磁信 — 文书撰写', layer: 'execution', canCall: [] },
+    { id: 'gong_bu', name: '工部', emoji: '🔧', role: '排版 — CV/PS 格式', layer: 'execution', canCall: [] }
   ],
-  flow: ['zhongshu_ling', 'zhongshu_sheren', 'menxia_shilang', 'jishizhong?', 'shangshu_ling', '{六部}'],
+  flow: ['zhongshu_ling', 'zhongshu_sheren', 'menxia_shilang', 'left_auditor', 'jishizhong', 'shangshu_ling', '{六部}'],
   // 唐制特色：门下省有封驳权，可以打回中书省
   canReject: { 'jishizhong': ['zhongshu_ling'] },
   permissions: 'tang'

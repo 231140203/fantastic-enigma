@@ -48,8 +48,10 @@ async function runDebate(params) {
   const costTracker = new CostTracker();
 
   // 自动选择参与者：决策层 + 相关执行层
+  const phase = params.phase || 'full';
+  const excludeExecution = phase === 'planning' || phase === 'review';
   const participants = params.participants
-    || selectParticipants(topic, regime);
+    || selectParticipants(topic, regime, excludeExecution);
 
   // ── Banner ──
   console.log();
@@ -177,14 +179,14 @@ async function runDebate(params) {
  * 自动选择参与者
  * @private
  */
-function selectParticipants(topic, regime) {
+function selectParticipants(topic, regime, excludeExecution = false) {
   const agents = regime.agents || [];
 
   // 决策层一定参与
   const planners = agents.filter(a => a.layer === 'planning').slice(0, 2);
 
-  // 执行层（最多3个参与）
-  const executors = agents.filter(a => a.layer === 'execution').slice(0, 3);
+  // 执行层（最多3个参与，除非被排除）
+  const executors = excludeExecution ? [] : agents.filter(a => a.layer === 'execution').slice(0, 3);
 
   // 审核层参与
   const reviewers = agents.filter(a => a.layer === 'review').slice(0, 1);
