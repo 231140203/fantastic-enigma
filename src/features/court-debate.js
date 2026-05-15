@@ -93,9 +93,10 @@ async function runDebate(params) {
           maxTokens: 1024
         });
 
-        const speech = response.content || '(无发言)';
-        const inputTokens = response.usage?.input_tokens || response.usage?.prompt_tokens || 0;
-        const outputTokens = response.usage?.output_tokens || response.usage?.completion_tokens || 0;
+        // 兼容不同 LLM 返回格式
+        const speech = response?.content || response?.choices?.[0]?.message?.content || '(无发言)';
+        const inputTokens = response?.usage?.input_tokens || response?.usage?.prompt_tokens || 0;
+        const outputTokens = response?.usage?.output_tokens || response?.usage?.completion_tokens || 0;
         costTracker.record(agentId, model || 'claude-sonnet-4-6', inputTokens, outputTokens);
 
         spinner.stop();
@@ -119,7 +120,8 @@ async function runDebate(params) {
         });
 
       } catch (err) {
-        spinner.fail(`${name} 发言失败: ${err.message}`);
+        spinner.stop();
+        console.error(chalk.red(`  ✗ ${name} 发言失败: ${err.message}`));
         transcript.push({
           round,
           agentId,
@@ -148,10 +150,11 @@ async function runDebate(params) {
       maxTokens: 1024
     });
 
-    summarySpinner.succeed('廷议总结完成');
+    summarySpinner.stop();
+    console.log(chalk.green('  ✓ 廷议总结完成'));
     console.log();
 
-    const summary = summaryResponse.content || '(无总结)';
+    const summary = summaryResponse?.content || summaryResponse?.choices?.[0]?.message?.content || '(无总结)';
     console.log(chalk.gray('  ┌─ 太史令记录 ────────────────────────────'));
     for (const line of summary.split('\n')) {
       console.log(chalk.gray('  │ ') + chalk.white(line));
@@ -162,8 +165,9 @@ async function runDebate(params) {
     summarySpinner.fail('总结失败');
   }
 
-  const cost = costTracker.getSummary();
-  console.log(chalk.gray(`\n  ⚡ 廷议消耗: ${cost.total.inputTokens + cost.total.outputTokens} tokens`));
+  const cost = costTracker.getSummary ? costTracker.getSummary() : { total: { inputTokens: 0, outputTokens: 0 } };
+  const totalTokens = (cost?.total?.inputTokens || 0) + (cost?.total?.outputTokens || 0);
+  console.log(chalk.gray(`\n  ⚡ 廷议消耗: ${totalTokens} tokens`));
   console.log();
 
   return { transcript, topic, rounds };
